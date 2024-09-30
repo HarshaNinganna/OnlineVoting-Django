@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulseConnect - Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='app_style.css') }}">
+</head>
+
+<body>
+    <header>
+        <div class="header-container">
+            <h1>PulseConnect</h1>
+            <nav>
+                <a href="{{ url_for('logout') }}">Logout</a>
+                <a href="{{ url_for('register') }}">Register</a>
+                <a href="{{ url_for('login') }}">Login</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="friends-list">
+            <h2>Your Friends</h2>
+            <ul>
+                {% for friend in friends %}
+                    <li>{{ friend.friend.username }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="post-container">
+            <h2>Add a New Post</h2>
+            <form method="POST" action="{{ url_for('add_post') }}" enctype="multipart/form-data">
+                <textarea name="post_content" required placeholder="What's on your mind?"></textarea>
+                <select name="post_type">
+                    <option value="text">Text</option>
+                    <option value="yes_no">Yes/No Question</option>
+                </select>
+                <input type="file" name="file">
+                <button type="submit">Post</button>
+            </form>
+        </div>
+
+        <hr>
+
+        <div class="recent-posts">
+            <h2>Recent Posts</h2>
+            {% for post in posts %}
+                <div class="post">
+                    <div class="post-content">
+                        <p>{{ post.content }}</p>
+                        
+                        {% if post.media_file %}
+                            <div class="media">
+                                {% if post.media_file.endswith('.mp4') or post.media_file.endswith('.avi') %}
+                                    <video controls>
+                                        <source src="{{ url_for('static', filename=post.media_file) }}" type="video/mp4">
+                                        Your browser does not support the video tag.
+                                    </video>
+                                {% else %}
+                                    <img src="{{ url_for('static', filename=post.media_file) }}" alt="Post Media">
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    {% if post.post_type == 'yes_no' %}
+                        <form class="vote-form" method="POST" action="{{ url_for('vote') }}">
+                            <input type="hidden" name="post_id" value="{{ post.post_id }}">
+                            <button type="submit" name="vote" value="yes">Yes</button>
+                            <button type="submit" name="vote" value="no">No</button>
+                        </form>
+                    {% endif %}
+
+                    <h4>Comments</h4>
+                    <form method="POST" action="{{ url_for('add_comment', post_id=post.post_id) }}">
+                        <input type="text" name="comment_content" placeholder="Add a comment..." required>
+                        <button type="submit">Comment</button>
+                    </form>
+
+                    <h5>Existing Comments:</h5>
+                    <ul class="comments-list">
+                        {% for comment in post.comments %}
+                            <li>{{ comment.content }}</li>
+                        {% endfor %}
+                    </ul>
+
+                    <form method="POST" action="{{ url_for('like_post', post_id=post.post_id) }}">
+                        <button type="submit">
+                            {% if post.likes | length == 0 %}
+                                Like
+                            {% else %}
+                                Unlike
+                            {% endif %}
+                        </button>
+                    </form>
+                </div>
+                <hr>
+            {% endfor %}
+        </div>
+    </main>
+</body>
+</html>
